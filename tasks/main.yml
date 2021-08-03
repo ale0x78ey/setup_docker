@@ -1,0 +1,55 @@
+- name: setup_docker [debian] | add Docker GPG apt key
+  apt_key:
+    url: "{{ docker_gpg_key }}"
+    state: present
+  become: yes
+  when: ansible_os_family == "Debian"
+
+- name: setup_docker [debian] | add Docker repository
+  apt_repository:
+    repo: "{{ docker_apt_repo }}"
+    state: present
+  become: yes
+  when: ansible_os_family == "Debian"
+
+- name: setup_docker [debian] | update repositories cache
+  apt: update_cache=yes
+  become: yes
+  changed_when: False
+  when: ansible_os_family == "Debian"
+
+- name: setup_docker [debian] | install requirements
+  package: name="{{ item }}"
+  become: yes
+  with_items: "{{ docker_requirements_debian }}"
+  when: ansible_os_family == "Debian"
+
+- name: setup_docker | create /etc/docker directory
+  file:
+    path: "/etc/docker"
+    mode: "755"
+    state: directory
+  become: yes
+
+- name: setup_docker | install etc/docker/daemon.json
+  template:
+    src: etc/docker/daemon.json.j2
+    dest: "/etc/docker/daemon.json"
+  become: yes
+
+- name: setup_docker [debian] | restart docker
+  systemd:
+    name: docker
+    state: restarted
+  become: yes
+  when: ansible_os_family == "Debian"
+
+- name: setup_docker | add user to docker group
+  user:
+    name: "{{ ansible_env.HOME }}"
+    groups: docker
+    append: yes
+  become: yes
+
+- name: setup_docker | reset ssh connection to allow user changes
+  meta: reset_connection

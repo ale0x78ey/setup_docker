@@ -1,0 +1,4 @@
+docker_requirements_debian:
+  - containerd.io
+  - docker-ce
+  - docker-ce-cli
