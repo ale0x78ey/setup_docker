@@ -1,7 +1,8 @@
 - name: setup_docker [debian] | add Docker GPG apt key
   apt_key:
-    url: "{{ docker_gpg_key }}"
+    url: "{{ docker_gpg_key_url }}"
     state: present
+    keyring: "{{ docker_gpg_keyring }}"
   become: yes
   when: ansible_os_family == "Debian"
 
@@ -9,13 +10,8 @@
   apt_repository:
     repo: "{{ docker_apt_repo }}"
     state: present
+    update_cache: yes
   become: yes
-  when: ansible_os_family == "Debian"
-
-- name: setup_docker [debian] | update repositories cache
-  apt: update_cache=yes
-  become: yes
-  changed_when: False
   when: ansible_os_family == "Debian"
 
 - name: setup_docker [debian] | install requirements
@@ -46,10 +42,7 @@
 
 - name: setup_docker | add user to docker group
   user:
-    name: "{{ ansible_env.HOME }}"
+    name: "{{ ansible_env.USER }}"
     groups: docker
     append: yes
   become: yes
-
-- name: setup_docker | reset ssh connection to allow user changes
-  meta: reset_connection
